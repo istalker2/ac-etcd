@@ -5,7 +5,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: test-job2
+      name: add-etcd-node-$AC_NAME-job
     spec:
       containers:
       - name: add-etcd-node-$AC_NAME

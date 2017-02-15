@@ -14,6 +14,11 @@ construction:
   # are reachable from this flow using these edges
   flow: etcd-add-node-flow
 
+destruction:
+  # selector, used to filter graph edges and then traverse over the nodes that
+  # are reachable from this flow using these edges
+  flow: etcd-remove-node-flow
+
 # stable flows have the same replica names ($AC_NAME) on each run whereas
 # non-stable flows generate new names on each run. Default is true
 stable: false

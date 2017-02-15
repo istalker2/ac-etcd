@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: remove-etcd-node-$AC_NAME-job
+spec:
+  template:
+    metadata:
+      name: remove-etcd-node-$AC_NAME-job
+    spec:
+      containers:
+      - name: remove-etcd-node-$AC_NAME
+        image: etcdjob
+        env:
+          - name: MEMBER_NAME
+            value: etcd-$AC_NAME
+        command:
+          - "/bin/sh"
+          - "-ec"
+          - |
+
+            # collect endpoints of existing nodes (used by etcdctl)
+            ETCDCTL_ENDPOINT=$(kubectl get services -l=component=${COMPONENT-etcd} --template \
+               '{{range .items}}http://{{.metadata.name}}{{":2380\n"}}{{end}}' | paste -sd "," -)
+
+            # find member ID by the name
+            MEMBER_ID=$(etcdctl member list | grep name=$MEMBER_NAME | cut -d':' -f1)
+
+            # remove member
+            etcdctl member remove $MEMBER_ID
+
+      restartPolicy: Never

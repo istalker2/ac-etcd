@@ -121,3 +121,14 @@ metadata:
 parent: service/etcd-$AC_NAME
 child: pod/etcd-pod-$AC_NAME
 
+---
+# etcd-scale (etcd-remove-node-flow) destruction flow (removes 1 node):
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-7
+  labels:
+    flow: etcd-remove-node-flow
+parent: flow/etcd-scale
+child: job/remove-etcd-node-$AC_NAME-job
