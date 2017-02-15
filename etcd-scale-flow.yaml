@@ -1,0 +1,32 @@
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Flow
+metadata:
+  name: etcd-scale
+
+# flows with the same replicaSet name share common list of created replicas
+# this allows to delete replicas created by one flow with another flow
+# by default, replicaSet name = flow name
+replicaSet: etcd-nodes
+
+# positive flow that is used to create objects
+construction:
+  # selector, used to filter graph edges and then traverse over the nodes that
+  # are reachable from this flow using these edges
+  flow: etcd-add-node-flow
+
+# stable flows have the same replica names ($AC_NAME) on each run whereas
+# non-stable flows generate new names on each run. Default is true
+stable: false
+
+# exported flows can can triggered by users using
+# `kubeac run worflow-name --arg=name1=value1 --arg=name2=value2` syntax
+# flows that are not exported can only be used by other flows as a building blocks
+# default = false
+exported: true
+
+
+# when the flow is triggered with multiplicator (i.e. add N nodes),
+# execute them one by one rather than at once.
+# One shouldn't add more than one node in a round, so lets do it sequentially
+sequential: true
+

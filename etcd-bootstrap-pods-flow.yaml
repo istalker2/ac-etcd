@@ -1,0 +1,22 @@
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Flow
+metadata:
+  name: etcd-bootstrap-pods-flow
+
+# how many times to replicate flow subgraph
+replicas: $replicas
+
+
+# positive flow that is used to create objects
+construction:
+  # selector, used to filter graph edges and then traverse over the nodes that
+  # are reachable from this flow using these edges
+  flow: etcd-bootstrap-pods
+
+# declaration of parameters that can be used in $something syntax (in addition
+# to predefined names) along the flow (including the Flow itself)
+# and their default values
+args:
+  - name: replicas
+    value: 3
+

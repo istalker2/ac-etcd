@@ -1,0 +1,123 @@
+# etcd-bootstrap-services flow
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-1
+  labels:
+    flow: etcd-bootstrap-services
+parent: flow/etcd-bootstrap-services-flow
+
+# here $AC_NAME is not expanded but remain as is. This is because here
+# we specify name of wrapped resources and for wrapped resources there is
+# no string substitution
+child: service/etcd-$AC_NAME
+
+---
+
+# etcd-bootstrap-pods flow
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-2
+  labels:
+    flow: etcd-bootstrap-pods
+parent: flow/etcd-bootstrap-pods-flow
+child: pod/initial-etcd-pod-$AC_NAME
+
+---
+
+# etcd-bootstrap flow:
+
+# 1) create $initialClusterSize node services
+# 2) create $initialClusterSize initial pods
+# 3) create entry point service
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-3
+  labels:
+    flow: etcd-bootstrap
+parent: flow/etcd-bootstrap
+# here we incorporate result of execution of etcd-bootstrap-services-flow
+# as a single node in the etcd-bootstrap flow
+child: flow/etcd-bootstrap-services-flow
+args:
+  replicas: $initialClusterSize
+
+---
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-4
+  labels:
+    flow: etcd-bootstrap
+# notice, that there are several edges originating from
+# etcd-bootstrap-services-flow flow. But only those that have the
+# flow=etcd-bootstrap-services label (which is specified in the Flow object)
+# are used to identify graph nodes that belong to this particular flow.
+# When the Flow object is used within other flow, it is incorporated as an
+# atomic unit. Each graph node can be included in many flows, but each time
+# the flow is executed we filter the edges and graph nodes that become
+# unreachable
+parent: flow/etcd-bootstrap-services-flow
+child: flow/etcd-bootstrap-pods-flow
+args:
+  replicas: $initialClusterSize
+
+---
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-5
+  labels:
+    flow: etcd-bootstrap
+parent: flow/etcd-bootstrap-pods-flow
+child: service/etcd-client
+
+---
+
+# etcd-scale (etcd-add-node-flow) flow:
+# 1) Register new node
+# 2) Create node service for the new node
+# 3) Create pod for the added node
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-6
+  labels:
+    flow: etcd-add-node-flow
+parent: flow/etcd-scale
+child: job/add-etcd-node-$AC_NAME-job
+
+---
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-7
+  labels:
+    flow: etcd-add-node-flow
+parent: job/add-etcd-node-$AC_NAME-job
+
+# we could have  flow/etcd-bootstrap-services-flow with replicaCount=1 here instead
+# but let's demonstrate that we can also use nodes in more than one flow since
+# the labels are on edges and not on graph nodes
+child: service/etcd-$AC_NAME
+
+---
+
+apiVersion: appcontroller.k8s/v1alpha1
+kind: Dependency
+metadata:
+  name: dependency-7
+  labels:
+    flow: etcd-add-node-flow
+parent: service/etcd-$AC_NAME
+child: pod/etcd-pod-$AC_NAME
+
