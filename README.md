@@ -16,6 +16,14 @@ to add 2 extra nodes,
 
 to remove 2 nodes,
 
+`kubeac get replicas etcd-nodes`
+
+to get list of cluster node IDs,
+
+`kubeac run etcd-scale --undo --replica=$NODE_ID`
+
+to delete some particular node,
+
 `kubeac run etcd-bootstrap --undo`
 
 to delete the entire cluster.
